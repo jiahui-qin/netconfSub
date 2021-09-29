@@ -24,6 +24,12 @@ NETCONF NOTICE工具可以连接至设备并监听设备的notification，支持
 - Tailwind CSS
 - Socket.io
 
+## 依赖库
+主要依赖以下开源库：
+
+* [Juniper/netconf-java](https://github.com/Juniper/netconf-java): 连接至设备
+* [PANTHEONtech/lighty-netconf-simulator](https://github.com/PANTHEONtech/lighty-netconf-simulator) 功能测试
+
 ## 使用方法：
 
 1. 运行`NetconfSubApplication.java`启动后端服务
@@ -46,6 +52,13 @@ NETCONF NOTICE工具可以连接至设备并监听设备的notification，支持
 4. 发送消息订阅xml
 5. 在模拟器的cmd窗口发送xml产生notification
 6. 在前端页面验证接收到的通知
+
+## 传统测试方法（Postman）
+
+1. 运行`NetconfSubApplication.java`
+2. 运行`PANTHEONtech/lighty-netconf-simulator`中的[Notification device example](https://github.com/PANTHEONtech/lighty-netconf-simulator/blob/master/examples/devices/lighty-notifications-device/README.md)
+3. 在`postman`中导入`./notification.postman_collection.json`
+4. 订阅本地启动的模拟器或其他netconf设备，可以在console中看到notification的消息
 
 ## Q&A：
 ### Q：为什么要把结果使用`System.out.println`打印出来？
