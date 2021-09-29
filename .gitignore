@@ -25,7 +25,7 @@ target/
 *~
 .DS_Store
 
-# STS
+### STS ###
 .apt_generated
 .classpath
 .factorypath
@@ -34,7 +34,7 @@ target/
 .springBeans
 .sts4-cache
 
-# IntelliJ IDEA
+### IntelliJ IDEA ###
 *.iws
 *.iml
 *.ipr
@@ -59,11 +59,14 @@ coverage/
 .cache/
 .parcel-cache/
 
-# NetBeans
+### NetBeans ###
 /nbproject/private/
-/nbbuild/
+/nbuild/
 /nbdist/
 /.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
 # Help
 HELP.md

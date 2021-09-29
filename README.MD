@@ -32,6 +32,15 @@ NETCONF NOTICE工具可以连接至设备并监听设备的notification，支持
 
 ## 使用方法：
 
+### 简单测试流程
+
+1. 启动lighty-netconf-simulator的Notification device example项目，打开一个cmd窗口连接至Notification device example所启动的netconf device
+2. 打开本项目，输入此netconf device的信息，发送消息订阅xml
+3. cmd窗口发送xml产生notification
+4. 验证
+
+### 完整测试流程（前端+后端）
+
 1. 运行`NetconfSubApplication.java`启动后端服务
 2. 运行`PANTHEONtech/lighty-netconf-simulator`中的[Notification device example](https://github.com/PANTHEONtech/lighty-netconf-simulator/blob/master/examples/devices/lighty-notifications-device/README.md)
 3. 启动前端服务：
@@ -44,16 +53,7 @@ NETCONF NOTICE工具可以连接至设备并监听设备的notification，支持
 5. 订阅设备通知，然后在模拟器中发送通知
 6. 在前端页面查看接收到的通知
 
-## 测试流程
-
-1. 启动lighty-netconf-simulator的Notification device example项目
-2. 打开前端页面，输入netconf device的信息
-3. 测试连接并连接设备
-4. 发送消息订阅xml
-5. 在模拟器的cmd窗口发送xml产生notification
-6. 在前端页面验证接收到的通知
-
-## 传统测试方法（Postman）
+### 传统测试方法（Postman）
 
 1. 运行`NetconfSubApplication.java`
 2. 运行`PANTHEONtech/lighty-netconf-simulator`中的[Notification device example](https://github.com/PANTHEONtech/lighty-netconf-simulator/blob/master/examples/devices/lighty-notifications-device/README.md)
