@@ -11,7 +11,7 @@ def test_netconf_tool():
         try:
             # 1. 访问前端页面
             print("访问前端页面...")
-            page.goto('http://localhost:5176')
+            page.goto('http://localhost:3001')
             page.wait_for_load_state('networkidle')
             
             # 截图确认页面加载
@@ -21,36 +21,36 @@ def test_netconf_tool():
             # 2. 测试连接管理
             print("\n测试连接管理...")
             
-            # 点击Manage Connections按钮
-            page.click("text=Manage Connections")
+            # 点击Manage Devices按钮
+            page.click("text=Manage Devices")
             time.sleep(2)
             
             # 检查连接管理对话框是否打开
-            if page.is_visible("text=Manage Connections"):
+            if page.is_visible("text=Manage Devices"):
                 print("连接管理对话框打开成功")
                 
-                # 点击Add Connection按钮
-                page.click("text=Add Connection")
+                # 点击Add New Device按钮
+                page.click("text=Add New Device")
                 time.sleep(1)
                 
                 # 填写连接信息
-                page.fill("input[placeholder*='Connection ID']", "test-device")
-                page.fill("input[placeholder*='Host']", "192.168.1.1")
-                page.fill("input[placeholder*='Port']", "830")
-                page.fill("input[placeholder*='Username']", "admin")
-                page.fill("input[placeholder*='Password']", "admin")
+                page.fill("input[placeholder*='e.g., router-main']", "test-device")
+                page.fill("input[placeholder*='192.168.1.1']", "192.168.1.1")
+                page.fill("input[value='830']", "830")
+                page.fill("input[placeholder*='admin']", "admin")
+                page.fill("input[placeholder*='••••••••']", "admin")
                 
                 # 截图连接表单
                 page.screenshot(path='/tmp/connection_form.png')
                 print("连接表单填写成功")
                 
-                # 点击Save Connection按钮
+                # 点击Connect Device按钮
                 # 注意：由于是测试环境，实际连接可能会失败，这里只测试UI流程
-                # page.click("text=Save Connection")
+                # page.click("text=Connect Device")
                 # time.sleep(3)
                 
                 # 关闭连接管理对话框
-                page.click("svg[stroke*='M6 18L18 6M6 6l12 12']")
+                page.click("button[class*='rounded-lg hover:bg-gray-700']")
                 time.sleep(1)
             
             # 3. 测试消息发送功能
