@@ -9,13 +9,16 @@
     "dev": "cd backend && npm start",
     "build": "npm run build:frontend && npm run build:backend",
     "build:frontend": "cd frontend && npm run build",
-    "build:backend": "echo 'Backend build complete'",
+    "build:backend": "node build-scripts.js",
     "package": "npm run build && cd backend && npm run pkg",
     "package:win": "npm run build && cd backend && npm run pkg:win",
     "package:linux": "npm run build && cd backend && npm run pkg:linux",
     "package:mac": "npm run build && cd backend && npm run pkg:mac",
+    "package:all": "npm run build && cd backend && npm run pkg",
     "docker:build": "docker build -t netconf-tool .",
-    "docker:run": "docker run -p 3001:3001 netconf-tool"
+    "docker:run": "docker run -p 3001:3001 netconf-tool",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
   },
   "keywords": ["netconf", "network", "management", "device", "yang"],
   "author": "",
