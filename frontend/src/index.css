@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #1a1a1a;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #666;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+/* 按钮悬停效果 */
+.btn {
+  @apply px-4 py-2 rounded-md transition-all duration-200 font-medium;
+}
+
+.btn:hover {
+  @apply transform -translate-y-0.5;
+}
+
+.btn:active {
+  @apply transform translate-y-0;
+}
+
+/* 卡片样式 */
+.card {
+  @apply bg-gray-800 rounded-lg p-4 shadow-lg transition-all duration-300;
+}
+
+.card:hover {
+  @apply shadow-xl;
+}
+
+/* 输入框样式 */
+.input {
+  @apply w-full px-3 py-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200;
+}
+
+.input:focus {
+  @apply bg-gray-600;
+}
+
+/* 选择框样式 */
+.select {
+  @apply w-full px-3 py-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200;
+}
+
+.select:focus {
+  @apply bg-gray-600;
+}
+
+/* 标签页样式 */
+.tab {
+  @apply px-4 py-2 rounded-md transition-all duration-200 font-medium;
+}
+
+.tab:hover {
+  @apply bg-gray-700;
+}
+
+.tab.active {
+  @apply bg-blue-600 text-white;
+}
+
+/* 加载状态 */
+.loading {
+  @apply flex items-center justify-center;
+}
+
+.loading-spinner {
+  @apply w-4 h-4 border-2 border-gray-400 border-t-blue-500 rounded-full animate-spin;
+}
+
+/* 错误提示 */
+.error {
+  @apply text-red-500 text-sm mt-1;
+}
+
+/* 成功提示 */
+.success {
+  @apply text-green-500 text-sm mt-1;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .sidebar {
+    @apply w-48;
+  }
+  
+  .main-content {
+    @apply p-2;
+  }
+  
+  .grid-cols-2 {
+    @apply grid-cols-1;
+  }
+  
+  .grid-cols-3 {
+    @apply grid-cols-1;
+  }
+  
+  .md\:col-span-2 {
+    @apply col-span-1;
+  }
+}
