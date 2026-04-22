@@ -21,14 +21,37 @@ app.use(express.json());
 const getStaticPath = () => {
   // 检查是否在pkg打包环境中
   if (process.pkg) {
+    // 优先检查可执行文件同目录下的dist文件夹
+    const pkgPath1 = path.join(path.dirname(process.execPath), 'dist');
+    if (fs.existsSync(pkgPath1)) {
+      return pkgPath1;
+    }
+    // 检查是否是snapshot内的资源
+    try {
+      const snapshotPath = path.join(__dirname, 'dist');
+      if (fs.existsSync(snapshotPath)) {
+        return snapshotPath;
+      }
+    } catch (e) {
+      // 忽略snapshot错误
+    }
+    // 最后返回默认路径
     return path.join(path.dirname(process.execPath), 'dist');
   }
+  
   // 开发环境路径
-  const devPath = path.join(__dirname, '../frontend/dist');
-  if (fs.existsSync(devPath)) {
-    return devPath;
+  const devPath1 = path.join(__dirname, '../frontend/dist');
+  if (fs.existsSync(devPath1)) {
+    return devPath1;
   }
-  // 备用路径（打包时的相对路径）
+  
+  // 检查后端目录下的dist
+  const devPath2 = path.join(__dirname, 'dist');
+  if (fs.existsSync(devPath2)) {
+    return devPath2;
+  }
+  
+  // 返回默认路径
   return path.join(__dirname, 'dist');
 };
 

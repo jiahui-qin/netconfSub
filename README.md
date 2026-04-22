@@ -12,6 +12,7 @@
 - 🎨 **现代化界面** - 响应式设计，深色主题，流畅动画
 - 📦 **开箱即用** - 支持打包成独立可执行文件
 - 🐳 **Docker支持** - 一键部署容器化应用
+- 🪟 **Windows优化** - 专为Windows平台提供启动脚本和打包工具
 
 ## 🛠️ 技术栈
 
@@ -29,6 +30,17 @@
 - Socket.io-client
 
 ## 🚀 快速开始
+
+### Windows用户快速开始
+
+Windows用户可以使用项目提供的自动化脚本快速启动：
+
+1. **进入 scripts 目录**
+2. **双击运行 `start-windows.bat`**
+3. **等待自动安装依赖和构建**
+4. **浏览器访问 http://localhost:3001**
+
+> 💡 更多Windows使用详情请查看：[Windows使用指南](./docs/WINDOWS-GUIDE.md)
 
 ### 前置条件
 
@@ -80,6 +92,28 @@ npm run dev
 
 ## 📦 打包部署
 
+### Windows平台打包（推荐）
+
+Windows用户可以使用自动化脚本一键打包：
+
+```cmd
+# 进入 scripts 目录
+cd scripts
+
+# 双击运行 create-release.bat
+# 或在命令行执行
+create-release.bat
+```
+
+这将自动完成以下步骤：
+- 检查环境和依赖
+- 构建前端
+- 打包成exe文件
+- 组装完整的发布包
+- 创建压缩包（如支持）
+
+发布包将生成在 `release/` 目录中。
+
 ### 打包成可执行文件
 
 #### 安装打包依赖
@@ -119,6 +153,8 @@ npm run package:mac
    - Windows: `netconf-tool.exe`
    - Linux: `./netconf-tool`
    - macOS: `./netconf-tool`
+
+> 💡 **Windows用户特别说明：** 建议使用 `scripts/` 目录下的 `create-release.bat` 脚本来创建完整的发布包，这样会包含启动脚本和文档，使用更方便。
 
 ### Docker部署
 
