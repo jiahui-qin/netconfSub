@@ -4,6 +4,8 @@ const { firstValueFrom } = require('rxjs');
 class ConnectionManager {
   constructor() {
     this.connections = new Map();
+    this.heartbeatIntervals = new Map();
+    this.heartbeatIntervalMs = 30000; // 默认30秒心跳
   }
 
   // 创建新连接
@@ -22,13 +24,20 @@ class ConnectionManager {
       await firstValueFrom(netconf.getData('/'));
 
       // 存储连接
-      this.connections.set(id, {
+      const connection = {
         id,
         config,
         netconf,
         status: 'connected',
-        lastActivity: new Date()
-      });
+        lastActivity: new Date(),
+        lastHeartbeat: null,
+        heartbeatStatus: 'ok'
+      };
+      
+      this.connections.set(id, connection);
+
+      // 启动心跳
+      this.startHeartbeat(id);
 
       return {
         id,
@@ -38,6 +47,69 @@ class ConnectionManager {
     } catch (error) {
       throw new Error(`Failed to create connection: ${error.message}`);
     }
+  }
+
+  // 启动心跳
+  startHeartbeat(id) {
+    if (this.heartbeatIntervals.has(id)) {
+      this.stopHeartbeat(id);
+    }
+
+    const interval = setInterval(async () => {
+      await this.checkHeartbeat(id);
+    }, this.heartbeatIntervalMs);
+
+    this.heartbeatIntervals.set(id, interval);
+  }
+
+  // 停止心跳
+  stopHeartbeat(id) {
+    if (this.heartbeatIntervals.has(id)) {
+      clearInterval(this.heartbeatIntervals.get(id));
+      this.heartbeatIntervals.delete(id);
+    }
+  }
+
+  // 检查心跳
+  async checkHeartbeat(id) {
+    const connection = this.connections.get(id);
+    if (!connection) {
+      this.stopHeartbeat(id);
+      return;
+    }
+
+    try {
+      // 发送一个简单的请求来检查连接状态
+      await firstValueFrom(connection.netconf.getData('/'));
+      connection.lastHeartbeat = new Date();
+      connection.heartbeatStatus = 'ok';
+      connection.status = 'connected';
+    } catch (error) {
+      console.error(`Heartbeat failed for ${id}:`, error.message);
+      connection.heartbeatStatus = 'error';
+      connection.status = 'disconnected';
+    }
+  }
+
+  // 获取连接状态详情
+  getConnectionStatus(id) {
+    const connection = this.connections.get(id);
+    if (!connection) {
+      return { status: 'not_found' };
+    }
+
+    return {
+      id,
+      status: connection.status,
+      heartbeatStatus: connection.heartbeatStatus,
+      lastActivity: connection.lastActivity,
+      lastHeartbeat: connection.lastHeartbeat,
+      config: {
+        host: connection.config.host,
+        port: connection.config.port,
+        username: connection.config.username
+      }
+    };
   }
 
   // 获取连接
