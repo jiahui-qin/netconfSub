@@ -17,11 +17,24 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// 获取所有连接
+// 获取所有连接（包含详细状态）
 router.get('/', (req, res) => {
   try {
     const connections = connectionManager.getAllConnections();
-    res.json(connections);
+    // 转换为详细状态格式，不包含敏感信息
+    const connectionsWithStatus = connections.map(conn => ({
+      id: conn.id,
+      status: conn.status,
+      heartbeatStatus: conn.heartbeatStatus || 'unknown',
+      lastActivity: conn.lastActivity,
+      lastHeartbeat: conn.lastHeartbeat,
+      config: {
+        host: conn.config.host,
+        port: conn.config.port,
+        username: conn.config.username
+      }
+    }));
+    res.json(connectionsWithStatus);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -52,11 +65,22 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// 检查连接状态
+// 检查连接状态（简单）
 router.get('/:id/status', (req, res) => {
   try {
     const { id } = req.params;
     const status = connectionManager.checkConnectionStatus(id);
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 获取连接详细状态（包含心跳信息）
+router.get('/:id/status/detail', (req, res) => {
+  try {
+    const { id } = req.params;
+    const status = connectionManager.getConnectionStatus(id);
     res.json(status);
   } catch (error) {
     res.status(500).json({ error: error.message });

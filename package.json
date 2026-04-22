@@ -1,0 +1,30 @@
+{
+  "name": "netconf-tool",
+  "version": "1.0.0",
+  "description": "Netconf Device Management Tool - A modern web-based tool for managing network devices via NETCONF protocol",
+  "main": "backend/index.js",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm start",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "echo 'Backend build complete'",
+    "package": "npm run build && cd backend && npm run pkg",
+    "package:win": "npm run build && cd backend && npm run pkg:win",
+    "package:linux": "npm run build && cd backend && npm run pkg:linux",
+    "package:mac": "npm run build && cd backend && npm run pkg:mac",
+    "docker:build": "docker build -t netconf-tool .",
+    "docker:run": "docker run -p 3001:3001 netconf-tool"
+  },
+  "keywords": ["netconf", "network", "management", "device", "yang"],
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

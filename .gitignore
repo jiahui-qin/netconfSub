@@ -1,33 +1,42 @@
-HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# Dependencies
+node_modules/
+*/node_modules/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# Build outputs
+dist/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+frontend/dist/
+*.log
 
-### VS Code ###
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE and editor
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS files
+Thumbs.db
+
+# Package files
+*.tgz
+*.tar.gz
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.parcel-cache/

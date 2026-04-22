@@ -130,6 +130,8 @@ class ConnectionManager {
     }
 
     try {
+      // 停止心跳
+      this.stopHeartbeat(id);
       await firstValueFrom(connection.netconf.close());
       this.connections.delete(id);
       return {
@@ -138,6 +140,9 @@ class ConnectionManager {
         message: 'Connection closed successfully'
       };
     } catch (error) {
+      // 即使关闭失败也停止心跳和清理连接
+      this.stopHeartbeat(id);
+      this.connections.delete(id);
       throw new Error(`Failed to close connection: ${error.message}`);
     }
   }
