@@ -20,8 +20,27 @@ class ConnectionManager {
         pass: password
       });
 
-      // 测试连接
-      await firstValueFrom(netconf.getData('/'));
+      // 测试连接并获取设备能力
+      const result = await firstValueFrom(netconf.getData('/'));
+      
+      // 解析设备能力
+      let deviceCapabilities = [];
+      try {
+        // 尝试从响应中提取设备能力
+        // 注意：这里需要根据实际的netconf-client库返回格式进行调整
+        if (result && typeof result === 'object') {
+          // 检查是否有能力信息
+          if (result.capabilities) {
+            deviceCapabilities = result.capabilities;
+          } else if (result.data && result.data.capabilities) {
+            deviceCapabilities = result.data.capabilities;
+          } else if (result.rpc && result.rpc.capabilities) {
+            deviceCapabilities = result.rpc.capabilities;
+          }
+        }
+      } catch (capError) {
+        console.error('Error parsing device capabilities:', capError);
+      }
 
       // 存储连接
       const connection = {
@@ -31,7 +50,9 @@ class ConnectionManager {
         status: 'connected',
         lastActivity: new Date(),
         lastHeartbeat: null,
-        heartbeatStatus: 'ok'
+        heartbeatStatus: 'ok',
+        deviceCapabilities: deviceCapabilities,
+        connectionError: null
       };
       
       this.connections.set(id, connection);
@@ -42,10 +63,35 @@ class ConnectionManager {
       return {
         id,
         status: 'connected',
-        message: 'Connection created successfully'
+        message: 'Connection created successfully',
+        deviceCapabilities: deviceCapabilities
       };
     } catch (error) {
-      throw new Error(`Failed to create connection: ${error.message}`);
+      console.error(`Connection failed for ${id}:`, error);
+      
+      // 构建详细的错误信息
+      let errorMessage = error.message;
+      let errorCode = 'CONNECTION_ERROR';
+      
+      if (error.message.includes('timeout')) {
+        errorCode = 'CONNECTION_TIMEOUT';
+        errorMessage = `Connection timeout: Unable to reach device at ${config.host}:${config.port}`;
+      } else if (error.message.includes('authentication')) {
+        errorCode = 'AUTHENTICATION_FAILED';
+        errorMessage = 'Authentication failed: Invalid username or password';
+      } else if (error.message.includes('connection refused')) {
+        errorCode = 'CONNECTION_REFUSED';
+        errorMessage = `Connection refused: No Netconf service running at ${config.host}:${config.port}`;
+      } else if (error.message.includes('no route to host')) {
+        errorCode = 'NO_ROUTE_TO_HOST';
+        errorMessage = `No route to host: Unable to reach ${config.host}`;
+      }
+      
+      throw new Error(JSON.stringify({
+        code: errorCode,
+        message: errorMessage,
+        originalError: error.message
+      }));
     }
   }
 
@@ -104,6 +150,8 @@ class ConnectionManager {
       heartbeatStatus: connection.heartbeatStatus,
       lastActivity: connection.lastActivity,
       lastHeartbeat: connection.lastHeartbeat,
+      deviceCapabilities: connection.deviceCapabilities || [],
+      connectionError: connection.connectionError,
       config: {
         host: connection.config.host,
         port: connection.config.port,

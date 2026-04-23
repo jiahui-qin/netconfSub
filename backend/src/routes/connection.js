@@ -13,7 +13,18 @@ router.post('/create', async (req, res) => {
     const result = await connectionManager.createConnection(id, config);
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    try {
+      // 尝试解析JSON格式的错误信息
+      const errorObj = JSON.parse(error.message);
+      res.status(500).json({
+        error: errorObj.message,
+        errorCode: errorObj.code,
+        originalError: errorObj.originalError
+      });
+    } catch (parseError) {
+      // 如果不是JSON格式，返回原始错误
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -28,6 +39,8 @@ router.get('/', (req, res) => {
       heartbeatStatus: conn.heartbeatStatus || 'unknown',
       lastActivity: conn.lastActivity,
       lastHeartbeat: conn.lastHeartbeat,
+      deviceCapabilities: conn.deviceCapabilities || [],
+      connectionError: conn.connectionError,
       config: {
         host: conn.config.host,
         port: conn.config.port,
@@ -48,7 +61,18 @@ router.get('/:id', (req, res) => {
     if (!connection) {
       return res.status(404).json({ error: 'Connection not found' });
     }
-    res.json(connection);
+    // 返回连接信息，包含设备能力
+    const connectionInfo = {
+      id: connection.id,
+      status: connection.status,
+      config: connection.config,
+      lastActivity: connection.lastActivity,
+      lastHeartbeat: connection.lastHeartbeat,
+      heartbeatStatus: connection.heartbeatStatus,
+      deviceCapabilities: connection.deviceCapabilities || [],
+      connectionError: connection.connectionError
+    };
+    res.json(connectionInfo);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
