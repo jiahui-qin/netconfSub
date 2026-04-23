@@ -12,7 +12,7 @@ const Sidebar = () => {
 
   useEffect(() => {
     // 初始化Socket.IO连接
-    const newSocket = io(API_URL);
+    const newSocket = io(window.location.origin);
     setSocket(newSocket);
 
     // 监听连接状态更新
