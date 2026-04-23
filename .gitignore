@@ -7,6 +7,10 @@ dist/
 build/
 frontend/dist/
 *.log
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
 # Environment variables
 .env
@@ -20,6 +24,15 @@ frontend/dist/
 *.swo
 *~
 .DS_Store
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+*.iws
+*.iml
+*.ipr
 
 # OS files
 Thumbs.db
@@ -40,3 +53,12 @@ coverage/
 # Cache
 .cache/
 .parcel-cache/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+
+# Help
+HELP.md

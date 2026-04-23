@@ -1,0 +1,152 @@
+{
+	"info": {
+		"_postman_id": "c3b97199-b8c0-4427-aec9-6ee0a9e6dac6",
+		"name": "netconf notification",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "测试连通性",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"ip\": \"127.0.0.1\",\r\n    \"port\": 12345,\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8084/test",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"test"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "订阅",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"ip\": \"127.0.0.1\",\r\n    \"port\": 12345,\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\",\r\n    \"xml\":\" <create-subscription xmlns=\\\"urn:ietf:params:xml:ns:netconf:notification:1.0\\\"></create-subscription>\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8084/getNotifications",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"getNotifications"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "查看状态",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"ip\": \"127.0.0.1\",\r\n    \"port\": 12345,\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\",\r\n    \"xml\":\" <create-subscription xmlns=\\\"urn:ietf:params:xml:ns:netconf:notification:1.0\\\"></create-subscription>\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8084/getNotificationState",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"getNotificationState"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "终止订阅",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"ip\": \"127.0.0.1\",\r\n    \"port\": 12345,\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\",\r\n    \"xml\":\" <create-subscription xmlns=\\\"urn:ietf:params:xml:ns:netconf:notification:1.0\\\"></create-subscription>\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8084/interruptSub",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"interruptSub"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "查看全部状态",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"ip\": \"127.0.0.1\",\r\n    \"port\": 12345,\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\",\r\n    \"xml\":\" <create-subscription xmlns=\\\"urn:ietf:params:xml:ns:netconf:notification:1.0\\\"></create-subscription>\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8084/getAllSubStatus",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"getAllSubStatus"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
