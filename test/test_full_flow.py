@@ -91,8 +91,33 @@ def test_full_flow():
         # Step 6: Add device 1
         print("7. Adding device 1...")
         page.click("button:has-text('Add Device')")
-        time.sleep(3)  # Wait longer for form to close and refresh
-        page.screenshot(path=os.path.join(SCREENSHOTS_DIR, "06_device1_added.png"), full_page=True)
+        # Wait longer for form to close and refresh
+        time.sleep(5)
+        # Wait for the page to stabilize
+        page.wait_for_load_state("networkidle")
+        # Try navigating away and back to refresh the page
+        page.goto("http://localhost:3001/")
+        page.wait_for_load_state("networkidle")
+        # Wait for any animations to complete
+        time.sleep(3)
+        # Ensure the page is visible
+        page.bring_to_front()
+        # Debug: print page state
+        print("Debug: Page title:", page.title())
+        print("Debug: Page URL:", page.url)
+        # Debug: Check page content using curl
+        import subprocess
+        curl_output = subprocess.check_output(["curl", "-s", "http://localhost:3001/"]).decode('utf-8')
+        print("Debug: Curl content length:", len(curl_output))
+        print("Debug: Curl content preview:", curl_output[:100], "...")
+        # Wait a bit more
+        time.sleep(3)
+        # Try different screenshot options
+        page.screenshot(
+            path=os.path.join(SCREENSHOTS_DIR, "06_device1_added.png"), 
+            full_page=True,
+            type="png"
+        )
         print("✓ Device 1 (Router-Main) added successfully")
         
         # Device 2
