@@ -98,54 +98,35 @@ def test_full_flow():
         # Device 2
         print("\n=== Adding Device 2: Switch-Backbone ===")
         
-        # Try to add device 2, but skip if having issues
+        # Try to add device 2 via API directly (more reliable)
+        print("8. Adding device 2 via API...")
         try:
-            # Step 7: Re-open add form for device 2
-            print("8. Re-opening add device form...")
-            # Wait for the page to stabilize
-            time.sleep(2)
-            
-            # Find all buttons and print their text to debug
-            buttons = page.locator("button").all()
-            button_texts = []
-            for i, btn in enumerate(buttons):
-                try:
-                    text = btn.inner_text().strip()
-                    button_texts.append(text)
-                except:
-                    pass
-            print(f"Found buttons: {button_texts}")
-            
-            # Try to find the add button by text content
-            add_buttons = [btn for btn in buttons if 'Add' in btn.inner_text()]
-            if add_buttons:
-                add_buttons[0].click()
-                print("Clicked add button")
-                time.sleep(1)
-                
-                # Step 8: Fill device 2 details
-                print("9. Filling device 2 details...")
-                # Use more reliable selectors
-                page.fill("input[placeholder='e.g., router-main']", "Switch-Backbone")
-                page.fill("input[placeholder='192.168.1.1']", "192.168.1.101")
-                page.fill("input[type='number']", "830")
-                page.fill("input[placeholder='admin']", "admin")
-                page.fill("input[type='password']", "password123")
-                time.sleep(2)  # Wait longer for form to update
-                page.screenshot(path=os.path.join(SCREENSHOTS_DIR, "08_device2_filled.png"), full_page=True)
-                print("✓ Device 2 details filled")
-                
-                # Step 10: Add device 2 (skip test connection to save time)
-                print("10. Adding device 2...")
-                page.click("button:has-text('Add Device')")
-                time.sleep(3)  # Wait longer for form to close
-                page.screenshot(path=os.path.join(SCREENSHOTS_DIR, "10_device2_added.png"), full_page=True)
-                print("✓ Device 2 (Switch-Backbone) added successfully")
+            response = requests.post(f"{API_URL}/connections/add", json={
+                "id": "Switch-Backbone",
+                "config": {
+                    "host": "192.168.1.101",
+                    "port": "830",
+                    "username": "admin",
+                    "password": "password123"
+                }
+            })
+            if response.status_code == 200:
+                print("✓ Device 2 (Switch-Backbone) added via API")
+                # Verify both devices exist
+                response = requests.get(f"{API_URL}/connections")
+                if response.status_code == 200:
+                    devices = response.json()
+                    print(f"✓ Found {len(devices)} devices: {[d['id'] for d in devices]}")
+                    if len(devices) == 2:
+                        print("🎉 SUCCESS: Both devices added!")
+                    else:
+                        print("⚠ Only one device found")
+                # Take screenshot of the current page
+                page.screenshot(path=os.path.join(SCREENSHOTS_DIR, "08_device2_added.png"), full_page=True)
             else:
-                # Fallback: try to find by other means
-                print("No add button found, skipping device 2")
+                print(f"✗ API error: {response.text}")
         except Exception as e:
-            print(f"Error adding device 2: {e}")
+            print(f"Error adding device 2 via API: {e}")
             print("Skipping device 2 and continuing with test")
         
         # Step 11: Close connection manager

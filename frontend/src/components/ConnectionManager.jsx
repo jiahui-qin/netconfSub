@@ -86,7 +86,10 @@ const ConnectionManager = ({ onClose }) => {
         password: ''
       });
       setTestResult(null);
-      fetchDevices();
+      // 延迟一下再刷新设备列表，确保状态更新完成
+      setTimeout(() => {
+        fetchDevices();
+      }, 500);
     } catch (error) {
       console.error('Error adding device:', error);
       alert('Failed to add device: ' + (error.response?.data?.error || error.message));
