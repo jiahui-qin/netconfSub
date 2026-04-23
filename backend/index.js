@@ -62,7 +62,8 @@ console.log('Serving static files from:', staticPath);
 const io = new Server(server, {
   cors: {
     origin: '*',
-    methods: ['GET', 'POST']
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 
