@@ -7,9 +7,41 @@ class ConnectionManager {
     this.heartbeatIntervals = new Map();
     this.heartbeatIntervalMs = 30000; // 默认30秒心跳
   }
+  
+  // 获取所有连接（Map）
+  getConnectionsMap() {
+    return this.connections;
+  }
 
-  // 创建新连接
-  async createConnection(id, config) {
+  // 添加设备配置（不立即连接）
+  addDevice(id, config) {
+    if (this.connections.has(id)) {
+      throw new Error(`Device with id '${id}' already exists`);
+    }
+
+    const device = {
+      id,
+      config,
+      netconf: null,
+      status: 'disconnected',
+      lastActivity: new Date(),
+      lastHeartbeat: null,
+      heartbeatStatus: 'unknown',
+      deviceCapabilities: [],
+      connectionError: null
+    };
+    
+    this.connections.set(id, device);
+
+    return {
+      id,
+      status: 'disconnected',
+      message: 'Device added successfully'
+    };
+  }
+
+  // 测试连接（不保存连接）
+  async testConnection(config) {
     try {
       const { host, port, username, password } = config;
       
@@ -20,16 +52,13 @@ class ConnectionManager {
         pass: password
       });
 
-      // 测试连接并获取设备能力
+      // 测试连接
       const result = await firstValueFrom(netconf.getData('/'));
       
       // 解析设备能力
       let deviceCapabilities = [];
       try {
-        // 尝试从响应中提取设备能力
-        // 注意：这里需要根据实际的netconf-client库返回格式进行调整
         if (result && typeof result === 'object') {
-          // 检查是否有能力信息
           if (result.capabilities) {
             deviceCapabilities = result.capabilities;
           } else if (result.data && result.data.capabilities) {
@@ -42,34 +71,21 @@ class ConnectionManager {
         console.error('Error parsing device capabilities:', capError);
       }
 
-      // 存储连接
-      const connection = {
-        id,
-        config,
-        netconf,
-        status: 'connected',
-        lastActivity: new Date(),
-        lastHeartbeat: null,
-        heartbeatStatus: 'ok',
-        deviceCapabilities: deviceCapabilities,
-        connectionError: null
-      };
-      
-      this.connections.set(id, connection);
-
-      // 启动心跳
-      this.startHeartbeat(id);
+      // 关闭测试连接
+      try {
+        await firstValueFrom(netconf.close());
+      } catch (e) {
+        // 忽略关闭错误
+      }
 
       return {
-        id,
-        status: 'connected',
-        message: 'Connection created successfully',
+        success: true,
+        message: 'Connection test successful',
         deviceCapabilities: deviceCapabilities
       };
     } catch (error) {
-      console.error(`Connection failed for ${id}:`, error);
+      console.error('Connection test failed:', error);
       
-      // 构建详细的错误信息
       let errorMessage = error.message;
       let errorCode = 'CONNECTION_ERROR';
       
@@ -87,11 +103,151 @@ class ConnectionManager {
         errorMessage = `No route to host: Unable to reach ${config.host}`;
       }
       
+      return {
+        success: false,
+        code: errorCode,
+        message: errorMessage,
+        originalError: error.message
+      };
+    }
+  }
+
+  // 连接到设备
+  async connectDevice(id) {
+    const device = this.connections.get(id);
+    if (!device) {
+      throw new Error('Device not found');
+    }
+
+    if (device.status === 'connected') {
+      return {
+        id,
+        status: 'connected',
+        message: 'Device already connected',
+        deviceCapabilities: device.deviceCapabilities
+      };
+    }
+
+    try {
+      const { host, port, username, password } = device.config;
+      
+      const netconf = new Netconf({
+        host,
+        port: parseInt(port) || 830,
+        user: username,
+        pass: password
+      });
+
+      // 测试连接并获取设备能力
+      const result = await firstValueFrom(netconf.getData('/'));
+      
+      // 解析设备能力
+      let deviceCapabilities = [];
+      try {
+        if (result && typeof result === 'object') {
+          if (result.capabilities) {
+            deviceCapabilities = result.capabilities;
+          } else if (result.data && result.data.capabilities) {
+            deviceCapabilities = result.data.capabilities;
+          } else if (result.rpc && result.rpc.capabilities) {
+            deviceCapabilities = result.rpc.capabilities;
+          }
+        }
+      } catch (capError) {
+        console.error('Error parsing device capabilities:', capError);
+      }
+
+      // 更新设备信息
+      device.netconf = netconf;
+      device.status = 'connected';
+      device.lastActivity = new Date();
+      device.heartbeatStatus = 'ok';
+      device.deviceCapabilities = deviceCapabilities;
+      device.connectionError = null;
+      
+      this.connections.set(id, device);
+
+      // 启动心跳
+      this.startHeartbeat(id);
+
+      return {
+        id,
+        status: 'connected',
+        message: 'Device connected successfully',
+        deviceCapabilities: deviceCapabilities
+      };
+    } catch (error) {
+      console.error(`Connection failed for ${id}:`, error);
+      
+      let errorMessage = error.message;
+      let errorCode = 'CONNECTION_ERROR';
+      
+      if (error.message.includes('timeout')) {
+        errorCode = 'CONNECTION_TIMEOUT';
+        errorMessage = `Connection timeout: Unable to reach device at ${device.config.host}:${device.config.port}`;
+      } else if (error.message.includes('authentication')) {
+        errorCode = 'AUTHENTICATION_FAILED';
+        errorMessage = 'Authentication failed: Invalid username or password';
+      } else if (error.message.includes('connection refused')) {
+        errorCode = 'CONNECTION_REFUSED';
+        errorMessage = `Connection refused: No Netconf service running at ${device.config.host}:${device.config.port}`;
+      } else if (error.message.includes('no route to host')) {
+        errorCode = 'NO_ROUTE_TO_HOST';
+        errorMessage = `No route to host: Unable to reach ${device.config.host}`;
+      }
+      
+      device.status = 'disconnected';
+      device.connectionError = errorMessage;
+      
       throw new Error(JSON.stringify({
         code: errorCode,
         message: errorMessage,
         originalError: error.message
       }));
+    }
+  }
+
+  // 断开设备连接
+  async disconnectDevice(id) {
+    const device = this.connections.get(id);
+    if (!device) {
+      throw new Error('Device not found');
+    }
+
+    if (device.status !== 'connected') {
+      return {
+        id,
+        status: 'disconnected',
+        message: 'Device already disconnected'
+      };
+    }
+
+    try {
+      // 停止心跳
+      this.stopHeartbeat(id);
+      
+      if (device.netconf) {
+        await firstValueFrom(device.netconf.close());
+      }
+      
+      device.netconf = null;
+      device.status = 'disconnected';
+      device.heartbeatStatus = 'unknown';
+      device.connectionError = null;
+      
+      return {
+        id,
+        status: 'disconnected',
+        message: 'Device disconnected successfully'
+      };
+    } catch (error) {
+      // 即使关闭失败也停止心跳和清理
+      this.stopHeartbeat(id);
+      device.netconf = null;
+      device.status = 'disconnected';
+      device.heartbeatStatus = 'unknown';
+      
+      throw new Error(`Failed to disconnect: ${error.message}`);
     }
   }
 

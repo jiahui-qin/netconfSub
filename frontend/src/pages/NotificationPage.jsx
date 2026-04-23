@@ -4,19 +4,15 @@ import { io } from 'socket.io-client';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
-const NotificationPage = () => {
-  const [connections, setConnections] = useState([]);
-  const [selectedConnection, setSelectedConnection] = useState('');
+const NotificationPage = ({ selectedDeviceId }) => {
   const [subscriptions, setSubscriptions] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const socketRef = useRef(null);
 
   useEffect(() => {
-    fetchConnections();
-    
     // Initialize WebSocket connection
-    socketRef.current = io(API_URL);
+    socketRef.current = io(window.location.origin);
     
     socketRef.current.on('notification', (data) => {
       setNotifications(prev => [data, ...prev]);
@@ -29,35 +25,9 @@ const NotificationPage = () => {
     };
   }, []);
 
-  const fetchConnections = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/connections`);
-      setConnections(response.data);
-      if (response.data.length > 0) {
-        setSelectedConnection(response.data[0].id);
-      }
-    } catch (error) {
-      console.error('Error fetching connections:', error);
-    }
-  };
-
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_URL}/api/notifications/history`, {
-        params: { connectionId: selectedConnection }
-      });
-      setNotifications(response.data);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubscribe = async () => {
-    if (!selectedConnection) {
-      alert('Please select a connection');
+    if (!selectedDeviceId) {
+      alert('Please select a connected device from the sidebar');
       return;
     }
 
@@ -69,27 +39,32 @@ const NotificationPage = () => {
       };
 
       const result = await axios.post(`${API_URL}/api/notifications/subscribe`, {
-        connectionId: selectedConnection,
+        connectionId: selectedDeviceId,
         subscription
       });
 
       setSubscriptions(prev => [...prev, {
         id: result.data.subscriptionId,
-        connectionId: selectedConnection,
+        connectionId: selectedDeviceId,
         subscription
       }]);
 
       alert('Subscription created successfully');
     } catch (error) {
       console.error('Error creating subscription:', error);
-      alert('Failed to create subscription: ' + error.response.data.error);
+      alert('Failed to create subscription: ' + (error.response?.data?.error || error.message));
     }
   };
 
   const handleUnsubscribe = async (subscriptionId) => {
+    if (!selectedDeviceId) {
+      alert('Please select a connected device from the sidebar');
+      return;
+    }
+
     try {
       await axios.post(`${API_URL}/api/notifications/unsubscribe`, {
-        connectionId: selectedConnection,
+        connectionId: selectedDeviceId,
         subscriptionId
       });
 
@@ -97,20 +72,29 @@ const NotificationPage = () => {
       alert('Subscription cancelled successfully');
     } catch (error) {
       console.error('Error cancelling subscription:', error);
-      alert('Failed to cancel subscription: ' + error.response.data.error);
+      alert('Failed to cancel subscription: ' + (error.response?.data?.error || error.message));
     }
   };
 
   const handleClearNotifications = async () => {
-    try {
-      await axios.delete(`${API_URL}/api/notifications/history`, {
-        params: { connectionId: selectedConnection }
-      });
-      setNotifications([]);
-    } catch (error) {
-      console.error('Error clearing notifications:', error);
-    }
+    setNotifications([]);
   };
+
+  if (!selectedDeviceId) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center p-8 bg-gray-800 rounded-2xl border border-gray-700 shadow-lg max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">Select a Device</h2>
+          <p className="text-gray-400 text-sm">Please connect and select a device from the sidebar to manage notifications</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -127,22 +111,10 @@ const NotificationPage = () => {
         </div>
         <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
           <div className="flex-1 min-w-[250px]">
-            <label className="block text-sm font-medium mb-2 text-gray-300">Connection</label>
-            <select
-              value={selectedConnection}
-              onChange={(e) => {
-                setSelectedConnection(e.target.value);
-                fetchNotifications();
-              }}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-200"
-            >
-              <option value="">Select a connection</option>
-              {connections.map((conn) => (
-                <option key={conn.id} value={conn.id}>
-                  {conn.id} ({conn.config.host}:{conn.config.port})
-                </option>
-              ))}
-            </select>
+            <div className="text-sm font-medium text-gray-300 mb-1">Selected Device</div>
+            <div className="px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-gray-200">
+              {selectedDeviceId}
+            </div>
           </div>
           <div className="flex gap-3 pt-6">
             <button
@@ -230,7 +202,7 @@ const NotificationPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               <span className="text-lg">No notifications yet</span>
-              <span className="text-sm opacity-75">Subscriptions will appear here</span>
+              <span className="text-sm opacity-75">Subscribe to receive notifications</span>
             </div>
           ) : (
             <div className="space-y-3 max-h-[calc(100%-4rem)] overflow-y-auto pr-2">

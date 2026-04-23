@@ -9,17 +9,18 @@ import ConnectionManager from './components/ConnectionManager';
 function App() {
   const [activeTab, setActiveTab] = useState('messages');
   const [showConnectionManager, setShowConnectionManager] = useState(false);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
 
   const renderActivePage = () => {
     switch (activeTab) {
       case 'messages':
-        return <MessagePage />;
+        return <MessagePage selectedDeviceId={selectedDeviceId} />;
       case 'notifications':
-        return <NotificationPage />;
+        return <NotificationPage selectedDeviceId={selectedDeviceId} />;
       case 'config':
-        return <ConfigPage />;
+        return <ConfigPage selectedDeviceId={selectedDeviceId} />;
       default:
-        return <MessagePage />;
+        return <MessagePage selectedDeviceId={selectedDeviceId} />;
     }
   };
 
@@ -31,7 +32,10 @@ function App() {
         setShowConnectionManager={setShowConnectionManager}
       />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <Sidebar 
+          selectedDeviceId={selectedDeviceId}
+          onSelectDevice={setSelectedDeviceId}
+        />
         <div className="flex-1 p-4 overflow-auto main-content">
           <div className="fade-in">
             {renderActivePage()}

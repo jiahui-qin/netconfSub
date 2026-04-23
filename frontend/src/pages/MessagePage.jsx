@@ -4,50 +4,75 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
-const MessagePage = () => {
-  const [connections, setConnections] = useState([]);
-  const [selectedConnection, setSelectedConnection] = useState('');
+const MessagePage = ({ selectedDeviceId }) => {
   const [message, setMessage] = useState('<rpc><get-config><source><running/></source><filter type="subtree"><configuration/></filter></get-config></rpc>');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
+  const [isFormatting, setIsFormatting] = useState(false);
 
-  useEffect(() => {
-    fetchConnections();
-  }, []);
-
-  const fetchConnections = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/connections`);
-      setConnections(response.data);
-      if (response.data.length > 0) {
-        setSelectedConnection(response.data[0].id);
+  // XML 格式化函数
+  const formatXml = (xml) => {
+    const PADDING = '  ';
+    const reg = /(>)(<)(\/*)/g;
+    let pad = 0;
+    
+    xml = xml.replace(reg, '$1\n$2$3');
+    
+    return xml.split('\n').map((node, index) => {
+      let indent = 0;
+      if (node.match(/.+<\/\w[^>]*>$/)) {
+        indent = 0;
+      } else if (node.match(/^<\/\w/)) {
+        if (pad !== 0) {
+          pad -= 1;
+        }
+      } else if (node.match(/^<\w([^>]*[^\/])?>.*$/)) {
+        indent = 1;
+      } else {
+        indent = 0;
       }
+      
+      const padding = new Array(pad + 1).join(PADDING);
+      pad += indent;
+      
+      return padding + node;
+    }).join('\n');
+  };
+
+  const handleFormatMessage = () => {
+    setIsFormatting(true);
+    try {
+      const formatted = formatXml(message);
+      setMessage(formatted);
     } catch (error) {
-      console.error('Error fetching connections:', error);
+      console.error('Error formatting message:', error);
+    } finally {
+      setIsFormatting(false);
     }
   };
 
   const handleSendMessage = async () => {
-    if (!selectedConnection) {
-      alert('Please select a connection');
+    if (!selectedDeviceId) {
+      alert('Please select a connected device from the sidebar');
       return;
     }
 
     try {
       setLoading(true);
       const result = await axios.post(`${API_URL}/api/messages/send`, {
-        connectionId: selectedConnection,
+        connectionId: selectedDeviceId,
         message
       });
-      setResponse(typeof result.data.response === 'string' ? result.data.response : JSON.stringify(result.data.response, null, 2));
+      const respContent = typeof result.data.response === 'string' ? result.data.response : JSON.stringify(result.data.response, null, 2);
+      setResponse(respContent);
       
       // Add to history
       setHistory(prev => [
         ...prev,
         {
           id: Date.now(),
-          connectionId: selectedConnection,
+          connectionId: selectedDeviceId,
           message,
           response: result.data.response,
           timestamp: new Date()
@@ -61,20 +86,25 @@ const MessagePage = () => {
     }
   };
 
-  const handleFormatMessage = async () => {
-    try {
-      const result = await axios.post(`${API_URL}/api/messages/format`, {
-        message
-      });
-      setMessage(result.data.formatted);
-    } catch (error) {
-      console.error('Error formatting message:', error);
-    }
-  };
-
   const handleSelectHistory = (item) => {
     setMessage(item.message);
   };
+
+  if (!selectedDeviceId) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center p-8 bg-gray-800 rounded-2xl border border-gray-700 shadow-lg max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">Select a Device</h2>
+          <p className="text-gray-400 text-sm">Please connect and select a device from the sidebar to send Netconf messages</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col space-y-4">
@@ -88,34 +118,28 @@ const MessagePage = () => {
               </svg>
               Netconf Message Console
             </h2>
-            <p className="text-gray-400 text-sm">Send and receive Netconf RPC messages</p>
-          </div>
-
-          <div className="flex-1 md:max-w-md">
-            <label className="block text-sm font-medium text-gray-300 mb-2">Select Device</label>
-            <select
-              value={selectedConnection}
-              onChange={(e) => setSelectedConnection(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            >
-              <option value="">Select a device connection</option>
-              {connections.map((conn) => (
-                <option key={conn.id} value={conn.id}>
-                  {conn.id} ({conn.config.host}:{conn.config.port})
-                </option>
-              ))}
-            </select>
+            <p className="text-gray-400 text-sm">Connected to: <span className="text-blue-400 font-medium">{selectedDeviceId}</span></p>
           </div>
 
           <div className="flex space-x-3">
             <button
               onClick={handleFormatMessage}
-              className="px-5 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"
+              className="px-5 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center space-x-2 disabled:opacity-50"
+              disabled={isFormatting}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
-              <span>Format</span>
+              {isFormatting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Formatting...</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                  </svg>
+                  <span>Format</span>
+                </>
+              )}
             </button>
             <button
               onClick={handleSendMessage}

@@ -2,19 +2,51 @@ const express = require('express');
 const router = express.Router();
 const connectionManager = require('../core/ConnectionManager');
 
-// 创建连接
-router.post('/create', async (req, res) => {
+// 添加设备（不连接）
+router.post('/add', async (req, res) => {
   try {
     const { id, config } = req.body;
     if (!id || !config) {
-      return res.status(400).json({ error: 'Connection ID and config are required' });
+      return res.status(400).json({ error: 'Device ID and config are required' });
     }
     
-    const result = await connectionManager.createConnection(id, config);
+    const result = connectionManager.addDevice(id, config);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// 测试连接
+router.post('/test', async (req, res) => {
+  try {
+    const { config } = req.body;
+    if (!config) {
+      return res.status(400).json({ error: 'Config is required' });
+    }
+    
+    const result = await connectionManager.testConnection(config);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// 连接设备
+router.post('/:id/connect', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await connectionManager.connectDevice(id);
     res.json(result);
   } catch (error) {
     try {
-      // 尝试解析JSON格式的错误信息
       const errorObj = JSON.parse(error.message);
       res.status(500).json({
         error: errorObj.message,
@@ -22,9 +54,19 @@ router.post('/create', async (req, res) => {
         originalError: errorObj.originalError
       });
     } catch (parseError) {
-      // 如果不是JSON格式，返回原始错误
       res.status(500).json({ error: error.message });
     }
+  }
+});
+
+// 断开设备
+router.post('/:id/disconnect', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await connectionManager.disconnectDevice(id);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -78,12 +120,19 @@ router.get('/:id', (req, res) => {
   }
 });
 
-// 关闭连接
+// 删除设备
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await connectionManager.closeConnection(id);
-    res.json(result);
+    // 先断开连接
+    try {
+      await connectionManager.disconnectDevice(id);
+    } catch (e) {
+      // 忽略断开错误
+    }
+    // 然后从Map中删除
+    connectionManager.getConnectionsMap().delete(id);
+    res.json({ id, message: 'Device deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
