@@ -3,7 +3,7 @@ import axios from 'axios';
 import io from 'socket.io-client';
 
 // 根据环境确定API地址
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 const Sidebar = () => {
   const [connections, setConnections] = useState([]);
