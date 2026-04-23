@@ -58,11 +58,6 @@ const getStaticPath = () => {
 const staticPath = getStaticPath();
 console.log('Serving static files from:', staticPath);
 
-// 静态文件服务（用于生产环境提供前端）
-if (fs.existsSync(staticPath)) {
-  app.use(express.static(staticPath));
-}
-
 // 创建Socket.io服务器
 const io = new Server(server, {
   cors: {
@@ -81,6 +76,11 @@ const connectionManager = require('./src/core/ConnectionManager');
 app.use('/api/connections', connectionRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// 静态文件服务（用于生产环境提供前端）
+if (fs.existsSync(staticPath)) {
+  app.use(express.static(staticPath));
+}
 
 // 健康检查
 app.get('/health', (req, res) => {
