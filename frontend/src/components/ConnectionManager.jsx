@@ -27,10 +27,16 @@ const ConnectionManager = ({ onClose }) => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/connections`);
-      setDevices(response.data);
+      if (Array.isArray(response.data)) {
+        setDevices(response.data);
+      } else {
+        console.error('Invalid devices format:', response.data);
+        setDevices([]);
+      }
     } catch (error) {
       console.error('Error fetching devices:', error);
-      // 即使出错也保持设备列表不变，避免页面异常
+      // 即使出错也保持设备列表为空数组，避免页面异常
+      setDevices([]);
     } finally {
       setLoading(false);
     }
@@ -89,11 +95,9 @@ const ConnectionManager = ({ onClose }) => {
         password: ''
       });
       setTestResult(null);
-      // 延迟一下再刷新设备列表，确保状态更新完成
-      setTimeout(() => {
-        console.log('Refreshing devices...');
-        fetchDevices();
-      }, 1000);
+      // 直接刷新设备列表，不需要延迟
+      console.log('Refreshing devices...');
+      await fetchDevices();
     } catch (error) {
       console.error('Error adding device:', error);
       alert('Failed to add device: ' + (error.response?.data?.error || error.message));

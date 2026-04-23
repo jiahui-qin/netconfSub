@@ -13,12 +13,16 @@ const Sidebar = ({ selectedDeviceId, onSelectDevice }) => {
 
   useEffect(() => {
     // 初始化Socket.IO连接
-    const newSocket = io(window.location.origin);
+    const newSocket = io();
     setSocket(newSocket);
 
     // 监听连接状态更新
     newSocket.on('connectionStatusUpdate', (statuses) => {
-      setDevices(statuses);
+      if (Array.isArray(statuses)) {
+        setDevices(statuses);
+      } else {
+        console.error('Invalid statuses format:', statuses);
+      }
     });
 
     // 初始获取连接列表
@@ -33,9 +37,16 @@ const Sidebar = ({ selectedDeviceId, onSelectDevice }) => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/connections`);
-      setDevices(response.data);
+      if (Array.isArray(response.data)) {
+        setDevices(response.data);
+      } else {
+        console.error('Invalid devices format:', response.data);
+        setDevices([]);
+      }
     } catch (error) {
       console.error('Error fetching devices:', error);
+      // 即使出错也保持设备列表为空数组，避免页面异常
+      setDevices([]);
     } finally {
       setLoading(false);
     }
@@ -202,13 +213,13 @@ const Sidebar = ({ selectedDeviceId, onSelectDevice }) => {
               <div className="mt-3 pt-3 border-t border-gray-600 flex justify-between text-xs text-gray-400">
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 a9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0a9 9 0 0118 0z" />
                   </svg>
                   Last HB: {formatDateTime(device.lastHeartbeat)}
                 </div>
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 a3 3 0 016 0zm6 3a2 2 0 11-4 0 a2 2 0 014 0zM7 10a2 2 0 11-4 0 a2 2 0 014 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0a3 3 0 016 0zm6 3a2 2 0 11-4 0a2 2 0 014 0zM7 10a2 2 0 11-4 0a2 2 0 014 0z" />
                   </svg>
                   {device.config.username}
                 </div>
