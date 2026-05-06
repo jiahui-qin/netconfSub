@@ -1,0 +1,12 @@
+{
+  "success": false,
+  "device1_added": false,
+  "device2_added": false,
+  "errors": [],
+  "screenshots": [
+    "01_initial_page.png",
+    "03_device1_filled.png",
+    "07_device2_filled.png",
+    "10_final_state_both_devices.png"
+  ]
+}
